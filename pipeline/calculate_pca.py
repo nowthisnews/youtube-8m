@@ -18,13 +18,14 @@ Options:
     --keep-scale                If set to true, do not perform whitening.
 
 """
+import datetime
 import glob
 import itertools
 import logging
+import numpy as np
 import os
 import pickle
 import time
-import numpy as np
 
 from typeopt import Arguments
 from sklearn.decomposition import IncrementalPCA
@@ -85,7 +86,7 @@ def save_progress(model, output_path, final=False):
     checkpoint_path = os.path.join(output_path, checkpoint_name)
 
     logger.info("Saving model to %s" % checkpoint_path)
-    with open(checkpoint_path), 'wb') as handle:
+    with open(checkpoint_path, 'wb') as handle:
         pickle.dump(ipca, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == '__main__':
@@ -114,3 +115,5 @@ if __name__ == '__main__':
 
             if arguments.save_progress:
                 save_progress(ipca, arguments.output)
+
+    save_progress(ipca, arguments.output, final=True)
