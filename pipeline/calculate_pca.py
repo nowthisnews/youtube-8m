@@ -80,7 +80,7 @@ def save_progress(model, output_path, final=False):
     if final:
         checkpoint_name = "final_ipca.pickle"
     else:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d% %H:%M:%S")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         checkpoint_name = "ipca_%s.pickle" % timestamp
 
     checkpoint_path = os.path.join(output_path, checkpoint_name)
@@ -98,7 +98,6 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logger.info(arguments)
 
-    # Show that IPCA works on batches
     ipca = IncrementalPCA(
         n_components=arguments.n_components,
         whiten=(not arguments.keep_scale))
