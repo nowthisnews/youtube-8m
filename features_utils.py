@@ -12,7 +12,7 @@ Options:
                                     [default: 100]
 
     --split=<float>                 Train-test split
-                                    [default: 0.8]
+                                    [default: 0.2]
 """
 import glob
 import hashlib
@@ -77,7 +77,7 @@ def read_from_tfrecord(filenames):
              'labels': tf.VarLenFeature(tf.int64),
              'mean_rgb': tf.FixedLenFeature([], tf.float32),
          },name='features')
-     
+
      return tfrecord_serialized
 
 def data_iterator(files, logging_step = 1000):
@@ -109,7 +109,7 @@ def transform_and_write(output_file, files, limit = 10):
     writer = tf.python_io.TFRecordWriter(output_file)
     for i, (x, y) in enumerate(itertools.islice(data_iterator(files), limit)):
         x_transformed = np.mean(ipca.transform(x), axis=0)
-        example = create_example(str(i), labels, x_transformed)
+        example = create_example(str(i), y, x_transformed)
         writer.write(example.SerializeToString())
 
     writer.close()
@@ -134,8 +134,8 @@ if __name__ == '__main__':
 
     logger.info("Transforming train dataset")
     transform_and_write(os.path.join(
-        args.output_file, "train/train.tfrecord"), train, limit)
+        args.output, "train/train.tfrecord"), train, args.limit)
 
     logger.info("Transforming test dataset")
     transform_and_write(os.path.join(
-        args.output_file, "test/test.tfrecord"), test, limit)
+        args.output, "test/test.tfrecord"), test, args.limit)
