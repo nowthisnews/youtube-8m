@@ -62,7 +62,6 @@ class BaseReader(object):
     """Create a thread for generating prediction and label tensors."""
     raise NotImplementedError()
 
-
 class YT8MAggregatedFeatureReader(BaseReader):
   """Reads TFRecords of pre-aggregated Examples.
 

@@ -102,7 +102,7 @@ def feature_pipeline(
     pca_model_path,
     quantize=False):
     '''
-    Feature pipeline similat to youtube-8m whitepaper
+    Feature pipeline similar to youtube-8m white-paper
     '''
 
     # step-by-step feature extraction pipeline
