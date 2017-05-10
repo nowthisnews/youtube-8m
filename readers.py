@@ -71,7 +71,7 @@ class YT8MAggregatedFeatureReader(BaseReader):
   """
 
   def __init__(self,
-               num_classes=4716,
+               num_classes=485,
                feature_sizes=[1024],
                feature_names=["mean_inc3"]):
     """Construct a YT8MAggregatedFeatureReader.
