@@ -22,13 +22,15 @@ import datetime
 import glob
 import itertools
 import logging
-import numpy as np
 import os
 import pickle
 import time
 
+import numpy as np
+
 from typeopt import Arguments
 from sklearn.decomposition import IncrementalPCA
+
 
 def batch(X, nrows=1024):
     '''
@@ -57,7 +59,7 @@ def batch(X, nrows=1024):
     yield res
 
 
-def features(path, logging_step = 1000):
+def features(path, logging_step=1000):
     logger = logging.getLogger(__name__)
     files = glob.glob(os.path.join(path, "*.pickle"))
 
@@ -65,17 +67,17 @@ def features(path, logging_step = 1000):
         if index % logging_step == 0:
             logger.debug("Processed %d files, curent file: %s" % (index, file_path))
         with open(file_path, 'rb') as f:
-            features, _ = pickle.load(f)
+            video_features, _ = pickle.load(f)
 
-        if features.size == 0:
+        if video_features.size == 0:
             logger.error("File %s has features with zero size! Skiping this file." % file_path)
             continue
 
-        yield features
+        yield video_features
+
 
 def save_progress(model, output_path, final=False):
     logger = logging.getLogger(__name__)
-
 
     if final:
         checkpoint_name = "final_ipca.pickle"
@@ -89,7 +91,9 @@ def save_progress(model, output_path, final=False):
     with open(checkpoint_path, 'wb') as handle:
         pickle.dump(ipca, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-if __name__ == '__main__':
+
+def main():
+    ''' main '''
     arguments = Arguments(__doc__, version='example 0.1')
 
     logging.basicConfig(
@@ -106,13 +110,17 @@ if __name__ == '__main__':
     for i, x in enumerate(itertools.islice(batch(features(arguments.path)), arguments.limit), 1):
         batch_start_time = time.time()
 
-        ipca.partial_fit(x,  check_input=False)
+        ipca.partial_fit(x, check_input=False)
         current_time = time.time()
         if i % arguments.logging_interval == 0:
             logger.info("[%d] %s in %g (averge: %g)" % (
-                i, x.shape, current_time - batch_start_time, (current_time - work_start_time)/i ))
+                i, x.shape, current_time - batch_start_time, (current_time - work_start_time)/i))
 
             if arguments.save_progress:
                 save_progress(ipca, arguments.output)
 
     save_progress(ipca, arguments.output, final=True)
+
+
+if __name__ == '__main__':
+    main()

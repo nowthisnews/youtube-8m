@@ -1,3 +1,15 @@
+import glob
+import logging
+import os
+import pickle
+import time
+
+import mp
+import sq
+
+from db import fetch, inner_join, filter_videos
+from utils.logging import setup_logging
+
 MODEL_PATH = '/models/image/inception/classify_image_graph_def.pb'
 DATA_PATH = '/data/video/video-level-features/mp/'
 NPROD = 1
@@ -9,17 +21,6 @@ VQUERY = "select post_id, url from videos where status='ok'"
 TQUERY = "select id, tags from videos where tags is not NULL"
 TAGS = "select tag_id, name, path from content_tags"
 
-import logging
-import glob
-import os
-import time
-
-import mp
-import sq
-
-from db import fetch, inner_join, filter_videos
-from utils.logging import setup_logging
-
 
 def run_and_measure(fun, n):
     logger = logging.getLogger(__name__)
@@ -30,7 +31,8 @@ def run_and_measure(fun, n):
     logger.info("Elapsed time was %g seconds [%g]" % (elapsed, elapsed/n))
 
 
-if __name__ == '__main__':
+def main():
+    ''' main '''
     setup_logging()
     logger = logging.getLogger(__name__)
 
@@ -53,35 +55,43 @@ if __name__ == '__main__':
     filtered, t2i, i2t = filter_videos(videos, MIN_TAGS)
     logger.info("Found %d videos with %d unique tags" % (len(filtered), len(t2i)))
 
-    # we will need thid eventually
+    # we will need this eventually
     tags = {
-	tag_id: (name, path) for (tag_id, name, path) in fetch(
+        tag_id: (name, path) for (tag_id, name, path) in fetch(
             host, tdbname, tuser, tpassword, TAGS)
     }
 
+    # dump tags to file
+    with open(os.path.join(DATA_PATH, "tags.pickle"), 'wb') as handle:
+        pickle.dump(tags, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     # check if we have processed some of those items
-    processed_videos = set([os.path.splitext(os.path.basename(f))[0]
+    processed = set([os.path.basename(f).split(".")[0]
                             for f in glob.glob(os.path.join(DATA_PATH, "*.pickle"))])
 
-    logger.info("Found %d processed videos" % len(processed_videos))
+    logger.info("Found %d processed videos" % len(processed))
 
     filtered = [(video_id, tags, url) for (video_id, tags, url) in filtered if
-                video_id not in  processed_videos]
+                video_id not in processed]
 
     logger.info("After removing processed videos, %d items left" % len(filtered))
-    work = filtered[:LIMIT]
 
-    fsq = lambda : sq.fetch(work,
+    fsq = lambda : sq.fetch(filtered[:LIMIT],
                             model_path=MODEL_PATH,
                             data_path=DATA_PATH,
                             logging_step=LOGGING_INTERVAL)
 
-    fmp = lambda : mp.fetch(work, nprod=NPROD,
+    fmp = lambda : mp.fetch(filtered[:LIMIT], nprod=NPROD,
                             model_path=MODEL_PATH,
                             data_path=DATA_PATH,
                             logging_step=LOGGING_INTERVAL)
 
-    run_and_measure(fsq, len(work))
+    # Use only the first GPU
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+    run_and_measure(fsq, len(filtered[:LIMIT]))
+
+
+if __name__ == '__main__':
+    main()

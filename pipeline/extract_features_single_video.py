@@ -60,11 +60,11 @@ def pca(features, pca_model_path):
     logger.debug("Performing PCA")
 
     # open PCA model
-    with open(pca_model_path, "rb") as file:
-        pca = pickle.load(file, encoding='latin1')
+    with open(pca_model_path, "rb") as handle:
+        ipca = pickle.load(handle, encoding='latin1')
 
     # reduce dimension and quantize data
-    features = pca.transform(features)
+    features = ipca.transform(features)
     features = np.array(features, dtype=np.float32)
 
     return features
@@ -110,7 +110,7 @@ def feature_pipeline(
     frames = video.extract_frames(video_path)
     features = incepction_v3(frames, inception_model_path)
     features = pca(features, pca_model_path)
-    featues = quantize(features) if quantize else features
+    features = quantize(features) if quantize else features
 
     # take average in columns
     features = np.mean(features, axis=0)
@@ -118,7 +118,8 @@ def feature_pipeline(
     return features
 
 
-if __name__ == '__main__':
+def main():
+    ''' main method '''
     parser = argparse.ArgumentParser()
     parser.add_argument("video_path", help="Path to transformed video")
 
@@ -137,7 +138,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logger = logging.getLogger(__name__)
-    logger.info("Extracting features from: {0}".format(args.video_path))
+    logger.info("Extracting features from: %s" % args.video_path)
 
     features = feature_pipeline(
         args.video_path,
@@ -148,3 +149,7 @@ if __name__ == '__main__':
 
     output_file = os.path.join(args.output_path, "test.tfrecord")
     write_to_tfrecord(args.video_path, [], features, output_file)
+
+
+if __name__ == '__main__':
+    main()

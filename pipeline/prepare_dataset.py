@@ -28,7 +28,7 @@ from sklearn.model_selection import train_test_split
 from pipeline.io import create_example, data_iterator
 
 
-def transform_and_write(output_file, files, limit=10):
+def transform_and_write(output_file, files, limit=None):
     '''
     Transforms features and tags and write transformed examples
     into TFRecords

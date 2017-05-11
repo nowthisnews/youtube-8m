@@ -10,9 +10,9 @@ def cheap_hash(txt, length=11):
     '''
     Hashes a sting
     '''
-    hash = hashlib.sha1()
-    hash.update(txt.encode('utf-8'))
-    return bytes(hash.hexdigest()[:length], 'utf-8')
+    hash_ = hashlib.sha1()
+    hash_.update(txt.encode('utf-8'))
+    return bytes(hash_.hexdigest()[:length], 'utf-8')
 
 
 def data_iterator(files, logging_step=1000):
@@ -24,14 +24,16 @@ def data_iterator(files, logging_step=1000):
     Returns:
         Tuple with numpy array of size (nframes, 2048) and list with tags
     '''
+    logger = logging.getLogger(__name__)
+
     for index, file_path in enumerate(files):
         video_id = os.path.basename(file_path).split(".")[0]
         if index % logging_step == 0:
-            logger.debug("Processed %d files, curent file: %s" %
-                (index, file_path))
+            logger.debug(
+                "Processed %d files, curent file: %s" % (index, file_path))
 
-        with open(file_path, 'rb') as f:
-            features, tags = pickle.load(f)
+        with open(file_path, 'rb') as handle:
+            features, tags = pickle.load(handle)
 
         if features.size == 0:
             logger.error(
@@ -44,17 +46,16 @@ def data_iterator(files, logging_step=1000):
 
 def create_example(video_id, labels, features):
     '''
-    Creates tf example
+    Creates tf example in format compliant with yt8m starter code
     '''
     example = tf.train.Example(
-        features=tf.train.Features(
-            feature={
-                'video_id': tf.train.Feature(
-                    bytes_list=tf.train.BytesList(value=[cheap_hash(video_id)])),
-                'labels': tf.train.Feature(
-                    int64_list=tf.train.Int64List(value=labels)),
-                'mean_rgb': tf.train.Feature(
-                    float_list=tf.train.FloatList(value=features))
+        features=tf.train.Features(feature={
+            'video_id': tf.train.Feature(
+                bytes_list=tf.train.BytesList(value=[cheap_hash(video_id)])),
+            'labels': tf.train.Feature(
+                int64_list=tf.train.Int64List(value=labels)),
+            'mean_rgb': tf.train.Feature(
+                float_list=tf.train.FloatList(value=features))
             }))
     return example
 
@@ -76,6 +77,9 @@ def write_to_tfrecord(video_id, labels, features, output_file):
 
 
 def read_from_tfrecord(filenames):
+    '''
+    Reads an example from list of file names
+    '''
     tfrecord_file_queue = tf.train.string_input_producer(
         filenames, name='queue')
     reader = tf.TFRecordReader()
