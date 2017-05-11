@@ -8,7 +8,8 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.platform import gfile
-from features_utils import write_to_tfrecord
+
+from pipeline.io import write_to_tfrecord
 
 from t1000.embedding import video
 
