@@ -27,6 +27,7 @@ import tensorflow as tf
 from typeopt import Arguments
 from sklearn.model_selection import train_test_split
 
+
 def cheap_hash(txt, length=11):
     '''
     Hashes a sting
@@ -40,12 +41,17 @@ def create_example(video_id, labels, features):
     '''
     Creates tf example
     '''
-    example = tf.train.Example(features=tf.train.Features(feature={
-        'video_id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[cheap_hash(video_id)])),
-        'labels': tf.train.Feature(int64_list=tf.train.Int64List(value=labels)),
-        'mean_rgb': tf.train.Feature(float_list=tf.train.FloatList(value=features))
-        }
-    ))
+    example = tf.train.Example(
+        features=tf.train.Features(
+            feature={
+                'video_id': tf.train.Feature(
+                    bytes_list=tf.train.BytesList(
+                        value=[
+                            cheap_hash(video_id)])), 'labels': tf.train.Feature(
+                    int64_list=tf.train.Int64List(
+                        value=labels)), 'mean_rgb': tf.train.Feature(
+                    float_list=tf.train.FloatList(
+                                        value=features))}))
     return example
 
 
@@ -66,36 +72,43 @@ def write_to_tfrecord(video_id, labels, features, output_file):
 
 
 def read_from_tfrecord(filenames):
-     tfrecord_file_queue = tf.train.string_input_producer(filenames, name='queue')
-     reader = tf.TFRecordReader()
-     _, tfrecord_serialized = reader.read(tfrecord_file_queue)
+    tfrecord_file_queue = tf.train.string_input_producer(
+        filenames, name='queue')
+    reader = tf.TFRecordReader()
+    _, tfrecord_serialized = reader.read(tfrecord_file_queue)
 
-     tfrecord_features = tf.parse_single_example(
-         tfrecord_serialized,
-         features={
-             'video_id': tf.FixedLenFeature([], tf.string),
-             'labels': tf.VarLenFeature(tf.int64),
-             'mean_rgb': tf.FixedLenFeature([], tf.float32),
-         },name='features')
+    tfrecord_features = tf.parse_single_example(
+        tfrecord_serialized,
+        features={
+            'video_id': tf.FixedLenFeature([], tf.string),
+            'labels': tf.VarLenFeature(tf.int64),
+            'mean_rgb': tf.FixedLenFeature([], tf.float32),
+        }, name='features')
 
-     return tfrecord_serialized
+    return tfrecord_serialized
 
-def data_iterator(files, logging_step = 1000):
+
+def data_iterator(files, logging_step=1000):
 
     for index, file_path in enumerate(files):
         if index % logging_step == 0:
-            logger.debug("Processed %d files, curent file: %s" % (index, file_path))
+            logger.debug(
+                "Processed %d files, curent file: %s" %
+                (index, file_path))
 
         with open(file_path, 'rb') as f:
             features, tags = pickle.load(f)
 
         if features.size == 0:
-            logger.error("File %s has features with zero size! Skiping this file." % file_path)
+            logger.error(
+                "File %s has features with zero size! Skiping this file." %
+                file_path)
             continue
 
         yield features, tags
 
-def transform_and_write(output_file, files, limit = 10):
+
+def transform_and_write(output_file, files, limit=10):
     '''
     Transforms features and tags and write transformed examples
     into TFRecords
@@ -114,6 +127,7 @@ def transform_and_write(output_file, files, limit = 10):
 
     writer.close()
 
+
 if __name__ == '__main__':
     args = Arguments(__doc__, version='example 0.1')
 
@@ -125,7 +139,7 @@ if __name__ == '__main__':
 
     # get the list of files
     files = glob.glob(os.path.join(args.data, "*.pickle"))
-    train, test = train_test_split(files, test_size = args.split)
+    train, test = train_test_split(files, test_size=args.split)
     logger.info("Train size: %d, test size: %d" % (len(train), len(test)))
 
     # load ipca
