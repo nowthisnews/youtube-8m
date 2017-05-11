@@ -97,10 +97,10 @@ def incepction_v3(frames, model_dir):
 
 
 def feature_pipeline(
-    video_path,
-    inception_model_path,
-    pca_model_path,
-    quantize=False):
+        video_path,
+        inception_model_path,
+        pca_model_path,
+        quantize=False):
     '''
     Feature pipeline similar to youtube-8m white-paper
     '''
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument("video_path", help="Path to transformed video")
 
     parser.add_argument(
-        "-i","--inception3-path", help="Path to inception model",
+        "-i", "--inception3-path", help="Path to inception model",
         required=True)
 
     parser.add_argument(
@@ -138,7 +138,10 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logger.info("Extracting features from: {0}".format(args.video_path))
 
-    features = feature_pipeline(args.video_path, args.inception3_path, args.pca_path)
+    features = feature_pipeline(
+        args.video_path,
+        args.inception3_path,
+        args.pca_path)
 
     logger.info("Saving features as TFRecordfile")
 
