@@ -6,4 +6,4 @@ CUDA_VISIBLE_DEVICES=0 python train.py \
 	--train_data_pattern=$TRAIN_DATA_PATTERN \
 	--model=LogisticModel \
 	--train_dir=$TRAIN_PATH \
-	--num_epoch=10
+	--num_epoch=1000
