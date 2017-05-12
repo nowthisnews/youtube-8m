@@ -1,5 +1,6 @@
 import psycopg2
 import itertools
+import logging
 
 from collections import Counter
 from itertools import groupby
