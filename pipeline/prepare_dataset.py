@@ -1,75 +1,103 @@
-"""
-Usage: prepare_datasets.py DATA IPCA OUTPUT [options]
-
-Arguments:
-    PATH    path to pickled features
-    OUTPUT  path to where one would like to store calculated PCA matrix
-
-Options:
-    -l, --limit=<int>               Limit on the number of parsed files
-
-    -s, --logging-interval=<int>    Log progress after this amount of steps
-                                    [default: 100]
-
-    --split=<float>                 Train-test split
-                                    [default: 0.2]
-"""
+import argparse
 import glob
 import logging
 import os
 import pickle
-import itertools
-import numpy as np
 
-import tensorflow as tf
-
-from typeopt import Arguments
 from sklearn.model_selection import train_test_split
-from pipeline.io import create_example, data_iterator
 
+from pickle_dataset import PickleDataset
+from tf_dataset import TensorDataset
 
-def transform_and_write(output_file, files, limit=None):
+def data_iterator(files, logging_step=1000):
     '''
-    Transforms features and tags and write transformed examples
-    into TFRecords
+    Given list of files loads data from pickled objects
 
     Arguments:
-    output_file     - dump path
-    files           - data iterator returning np.array with
-                      features (x, 2048) and list of tags
-    limit           - limit the number of files
+        files   - list of paths to pickles files
+    Returns:
+        Tuple with numpy array of size (nframes, 2048) and list with tags
     '''
-    writer = tf.python_io.TFRecordWriter(output_file)
-    for name, x, y in itertools.islice(data_iterator(files), limit):
-        x_transformed = np.mean(ipca.transform(x), axis=0)
-        example = create_example(name, y, x_transformed)
-        writer.write(example.SerializeToString())
+    logger = logging.getLogger(__name__)
 
-    writer.close()
+    for index, file_path in enumerate(files):
+        video_id = os.path.basename(file_path).split(".")[0]
+        if index % logging_step == 0:
+            logger.debug(
+                "Processed %d files, curent file: %s" % (index, file_path))
 
+        with open(file_path, 'rb') as handle:
+            features, tags = pickle.load(handle)
+
+        if features.size == 0:
+            logger.error(
+                "File %s has features with zero size! Skiping this file." %
+                file_path)
+            continue
+
+        yield video_id, features, tags
 
 if __name__ == '__main__':
-    args = Arguments(__doc__, version='example 0.1')
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d',
+                        '--data',
+                        help = 'Path to data',
+                        required = True)
+    parser.add_argument('-i',
+                        '--ipca',
+                        help = 'Path to ipca',
+                        required = True)
+    parser.add_argument('-o',
+                        '--output',
+                        help = 'Path to the output file',
+                        required = True)
+    parser.add_argument('-p',
+                        '--is_pickle',
+                        help = 'Is save format pickle? T/F',
+                        default = 'T',
+                        required = False)
+    parser.add_argument('-s',
+                        '--split',
+                        help = 'split',
+                        required = False,
+                        default=0.2)
+    parser.add_argument('-l',
+                        '--limit',
+                        help = 'Path to data',
+                        required = False,
+                        default=None)
+    args = parser.parse_args()
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
     logger.info(args)
-
+    is_pickle = args.is_pickle
+    is_pickle = True if is_pickle is 'T' or is_pickle is 'True' else False
+    
     # get the list of files
-    files = glob.glob(os.path.join(args.data, "*.pickle"))
-    train, test = train_test_split(files, test_size=args.split)
+    files = glob.glob(os.path.join(args.data,'*.pickle'))
+    train, test = train_test_split(files, test_size=float(args.split))
     logger.info("Train size: %d, test size: %d" % (len(train), len(test)))
 
     # load ipca
     logger.info("Loading PCA from %s" % args.ipca)
     ipca = pickle.load(open(args.ipca, 'rb'))
-
     logger.info("Transforming train dataset")
-    transform_and_write(os.path.join(
-        args.output, "train/train.tfrecord"), train, args.limit)
-
+    if is_pickle:
+        transformer = PickleDataset(data_iterator=data_iterator, ipca=ipca)
+        save_file_extension = '.p'
+    else:
+        transformer = TensorDataset(data_iterator=data_iterator, ipca=ipca)
+        save_file_extension = '.tfrecord'
+        
+    
+    transformer.make(
+            os.path.join(args.output, 
+                         'train/train%s' % save_file_extension),
+            train, args.limit)
     logger.info("Transforming test dataset")
-    transform_and_write(os.path.join(
-        args.output, "test/test.tfrecord"), test, args.limit)
+    transformer.make(
+            os.path.join(args.output, 
+                         'test/test%s' % save_file_extension),
+            test, args.limit)
