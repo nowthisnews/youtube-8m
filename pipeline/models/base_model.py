@@ -10,18 +10,19 @@ class BaseModel:
         self.train_ds = train_ds
         self.test_ds = test_ds
         
-    def make(self, k_folds, file_name):
+    def make(self, file_name):
         logging.info('Spliting dataset into training and test sets.')
         X_train, Y_train = self.prepare_dataset(self.train_ds)
         
         logging.info('Starting training %s...' % self.__class__.__name__)
-        pretrained_model = self.find_parameters(X_train, Y_train, k_folds)
+        print(Y_train.shape)
+        pretrained_model = self.find_parameters(X_train, Y_train)
         self.model = pretrained_model
         self.save_model(file_name)
         
     def prepare_dataset(self, dataset):
         features = np.array([object['features'] for object in dataset])
-        labels = np.array([object['label'] for object in dataset])
+        labels = np.array([max(object['labels']) for object in dataset])
         return features, labels
     
     def find_parameters(self, X_train, Y_train, k_folds):
@@ -32,7 +33,7 @@ class BaseModel:
             pickle.dump(self.model.best_params_, file)
     
     def load_model(self, file_name):
-        logging.info('Loading SVC model from %s.', file_name)
+        logging.info('Loading %s model from %s.', (self.__class__.__name__, file_name))
         self.model =  pickle.load(open(file_name, 'rb'))
         
     def evaluate_model(self):
