@@ -16,7 +16,7 @@ class NTGradientBoostingClassifier(BaseModel):
         parameters = {
                       'loss': ['deviance', 'exponential'],
                       'learning_rate': [0.001, 0.1, 1],
-                      'n_estimators': [50, 100, 150, 200]
+                      'n_estimators': [50, 100, 150, 200],
         }
         
         logging.info('Searching for the best parameters...')
