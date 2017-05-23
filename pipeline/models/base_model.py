@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import logging
 import numpy as np
+import os
 import pickle
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 class BaseModel:
-    def __init__(self, train_ds, test_ds):
+    def init_datasets(self, train_ds, test_ds):
         self.train_ds = train_ds
         self.test_ds = test_ds
         
@@ -37,4 +38,15 @@ class BaseModel:
         self.model =  pickle.load(open(file_name, 'rb'))
         
     def evaluate_model(self):
-        pass
+        test_features, test_labels = self.prepare_dataset(self.test_ds)
+        predicted = self.model.predict(test_features)
+        
+        assert test_labels.shape[0] == predicted.shape[0]
+        
+        result = 1 - np.count_nonzero(predicted-test_labels)/predicted.shape[0]
+        self.result = result
+        
+    def save_results(self, directory):
+        file_path = os.path.join(directory, "%s_results.txt" % self.__class__.__name__)
+        with open(file_path, "w") as file:
+            file.write("result: %s" % self.result)
