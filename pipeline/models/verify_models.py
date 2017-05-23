@@ -8,6 +8,7 @@ from k_neighbors import NTKNeighbors
 import logging
 from logistic_regression import NTLogisticRegression
 from mlp import NTMLP
+import os
 import pickle
 from sgd_classifier import NTSGDClassifier
 from svm import NTSVM
@@ -31,6 +32,7 @@ class Verifier:
     def train_model(self, model, directory):
         model.init_datasets(self.train_ds, self.test_ds)
         file_name = "%s_model.p" % model.__class__.__name__
+        file_name = os.path.join(directory, file_name)
         model.make(file_name)
         self.model = model
     
