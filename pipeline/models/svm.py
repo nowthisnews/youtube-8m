@@ -30,5 +30,13 @@ if __name__=='__main__':
         train_ds = pickle.load(file)
     with open('../test/test.p', 'rb') as file:
         test_ds = pickle.load(file)
-    svm = NTSVM(train_ds, test_ds)
-    svm.make('svc_model.p')
+    svm = NTSVM()
+    svm.init_datasets(train_ds, test_ds)
+    # svm.make('svc_model.p')
+    my_svm = SVC()
+    features, labels = svm.prepare_dataset(test_ds)
+    my_svm.fit(features, labels)
+    predicted = my_svm.predict(features)
+    svm.model = my_svm
+    svm.evaluate_model()
+    svm.save_results('/Users/admin/youtube-8m/pipeline/models')
