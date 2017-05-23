@@ -3,6 +3,9 @@ import logging
 import numpy as np
 import os
 import pickle
+from sklearn.metrics import accuracy_score, average_precision_score, \
+                            precision_score, recall_score, \
+                            cohen_kappa_score
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,10 +45,19 @@ class BaseModel:
         
         assert test_labels.shape[0] == predicted.shape[0]
         
-        result = 1 - np.count_nonzero(predicted-test_labels)/predicted.shape[0]
-        self.result = result
+        accuracy = accuracy_score(test_labels, predicted)
+        average_precision = average_precision_score(test_labels, predicted)
+        precision = precision_score(test_labels, predicted, average='micro')
+        recall = recall_score(test_labels, predicted, average='micro')
+        cohen_kappa = cohen_kappa_score(test_labels, predicted)
+        
+        self.result = {'accuracy': accuracy, 'average precision': average_precision,
+                       'precision': precision, 'recall': recall,
+                       'cohen kappa': cohen_kappa}
         
     def save_results(self, directory):
         file_path = os.path.join(directory, "%s_results.txt" % self.__class__.__name__)
         with open(file_path, "w") as file:
-            file.write("result: %s" % self.result)
+            for key, value in self.result.items():
+                file.write("%s: %s" % (key, value))
+            
