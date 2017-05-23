@@ -16,7 +16,6 @@ class BaseModel:
         X_train, Y_train = self.prepare_dataset(self.train_ds)
         
         logging.info('Starting training %s...' % self.__class__.__name__)
-        print(Y_train.shape)
         pretrained_model = self.find_parameters(X_train, Y_train)
         self.model = pretrained_model
         self.save_model(file_name)
