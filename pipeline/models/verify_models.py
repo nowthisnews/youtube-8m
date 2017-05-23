@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-import numpy as np
-import pickle
-from svm import NTSVM
 from adaboost_classifier import NTAdaBoostClassifier
+import argparse
 from decission_tree import NTDecisionTreeClassifier
 from gaussian_classifier import NTGaussianProcessClassifier
 from gradient_boosting import NTGradientBoostingClassifier
 from k_neighbors import NTKNeighbors
+import logging
 from logistic_regression import NTLogisticRegression
 from mlp import NTMLP
+import pickle
 from sgd_classifier import NTSGDClassifier
+from svm import NTSVM
 
 
 
@@ -39,20 +40,59 @@ class Verifier:
     def save_results(self, directory):
         self.model.save_results(directory)
         
-
+        
+def parse_arguments(parser):
+    parser.add_argument('-t',
+                        '--train_ds',
+                        help = 'Path to train dataset',
+                        required = True)
+    parser.add_argument('-e',
+                        '--test_ds',
+                        help = 'Path to test dataset',
+                        required = True)
+    parser.add_argument('-m',
+                        '--save_model_dir',
+                        help = 'Model save directory',
+                        required = True)
+    parser.add_argument('-p',
+                        '--save_results_directory',
+                        help = 'Save results directory',
+                        default = 'T',
+                        required = True)
+    args = parser.parse_args()
+    return args
+    
 if __name__ == '__main__':
-    train_ds = ""
-    test_ds = ""
-    save_model_dir = ""
-    save_results_directory = ""
+    parser = argparse.ArgumentParser()
+    args = parse_arguments(parser)
+    train_ds = args.train_ds
+    test_ds = args.test_ds
+    save_model_dir = args.save_model_dir
+    save_results_directory = args.save_results_directory
+    
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    logger.info(args)
+
+    logger.info("Set models verifier")
     verifier = Verifier(train_ds, test_ds)
+    logger.info("Open training and testing datasets")
     verifier.open_sets()
+    logger.info("Create models")
     models = [NTSVM(), NTAdaBoostClassifier(), NTDecisionTreeClassifier(),
               NTGaussianProcessClassifier(), NTGradientBoostingClassifier(), 
               NTKNeighbors(), NTLogisticRegression(), NTMLP(),
               NTSGDClassifier()]
     for model in models:
+        logger.info("Train %s" % model.__class__.__name__)
         verifier.train_model(model, save_model_dir)
+        logger.info("Evaluate %s" % model.__class__.__name__)
         verifier.evaluate_model()
+        logger.info("Saving results")
         verifier.save_results(save_results_directory)
+        logger.info("Clearing cache")
         verifier.clear_cache()
+         
+    logger.info("Done")
