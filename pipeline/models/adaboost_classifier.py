@@ -4,6 +4,7 @@ import logging
 import pickle
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
 
 
 
@@ -14,12 +15,13 @@ class NTAdaBoostClassifier(BaseModel):
     def find_parameters(self, X_train, Y_train):
         # search the best svr hyperparameters
         parameters = {
+                      'base_estimator': SVC(C=0.1, gamma=1e-08, kernel='linear'),
                       'n_estimators': [50, 100, 150, 200]
         }
         
         logging.info('Searching for the best parameters...')
         clf = GridSearchCV(AdaBoostClassifier(), parameters, n_jobs = 10)
-        pretrained_model = clf.fit(X_train, Y_train)
+        pretrained_model = clf.fit(X_train, Y_train, probability=True)
         
         return pretrained_model
     

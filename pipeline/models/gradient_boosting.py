@@ -21,7 +21,7 @@ class NTGradientBoostingClassifier(BaseModel):
         
         logging.info('Searching for the best parameters...')
         clf = GridSearchCV(GradientBoostingClassifier(), parameters, n_jobs = 10)
-        pretrained_model = clf.fit(X_train, Y_train)
+        pretrained_model = clf.fit(X_train, Y_train, probability=True)
         
         return pretrained_model
     
