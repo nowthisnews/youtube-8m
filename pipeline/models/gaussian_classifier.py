@@ -14,8 +14,8 @@ class NTGaussianProcessClassifier(BaseModel):
     def find_parameters(self, X_train, Y_train):
         # search the best svr hyperparameters
         logging.info('Fitting the model...')
-        clf = GaussianProcessClassifier()
-        pretrained_model = clf.fit(X_train, Y_train, probability=True)
+        clf = GaussianProcessClassifier(probability=True)
+        pretrained_model = clf.fit(X_train, Y_train)
         
         return pretrained_model
     

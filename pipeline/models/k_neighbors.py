@@ -17,8 +17,8 @@ class NTKNeighbors(BaseModel):
                 }
         logging.info('Searching for the best parameters...')
         
-        gs = GridSearchCV(KNeighborsClassifier(), params, n_jobs = 10)
-        pretrained_model = gs.fit(X_train, Y_train, probability=True)
+        gs = GridSearchCV(KNeighborsClassifier(probability=True), params, n_jobs = 10)
+        pretrained_model = gs.fit(X_train, Y_train)
         
         return pretrained_model
     

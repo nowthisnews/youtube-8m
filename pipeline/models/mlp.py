@@ -17,8 +17,8 @@ class NTMLP(BaseModel):
                 'learning_rate': ['invscaling', 'adaptive']
                 }
         logging.info('Searching for the best parameters...')
-        gs = GridSearchCV(MLPClassifier(), params, n_jobs = 10)
-        pretrained_model = gs.fit(X_train, Y_train, probability=True)
+        gs = GridSearchCV(MLPClassifier(probability=True), params, n_jobs = 10)
+        pretrained_model = gs.fit(X_train, Y_train)
         
         return pretrained_model
     

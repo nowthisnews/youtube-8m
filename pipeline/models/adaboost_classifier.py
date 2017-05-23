@@ -20,8 +20,8 @@ class NTAdaBoostClassifier(BaseModel):
         }
         
         logging.info('Searching for the best parameters...')
-        clf = GridSearchCV(AdaBoostClassifier(), parameters, n_jobs = 10)
-        pretrained_model = clf.fit(X_train, Y_train, probability=True)
+        clf = GridSearchCV(AdaBoostClassifier(probability=True), parameters, n_jobs = 10)
+        pretrained_model = clf.fit(X_train, Y_train)
         
         return pretrained_model
     
