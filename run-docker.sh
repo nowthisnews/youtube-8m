@@ -1,8 +1,8 @@
 # set defaults
 USE_GPU=true
 HOST_PORT=9999
-GPU_IMAGE=yt8m:gpu
-CPU_IMAGE=yt8m:cpu
+CPU_IMAGE=docker-registry.nowth.is/yt8m:cpu
+GPU_IMAGE=docker-registry.nowth.is/yt8m:gpu
 
 DATA=/mnt/data/
 MODELS=/mnt/models
