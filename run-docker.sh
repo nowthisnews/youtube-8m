@@ -9,13 +9,14 @@ MODELS=/mnt/models
 NAME=video-tags
 
 # parse arguments
-while getopts gd:m:p:e: option
+while getopts gd:m:p:n:e: option
 do 
     case "${option}" in 
         g) USE_GPU='true';;
-        p) HOST_POST=${OPTARG};; 
         d) DATA=${OPTARG};; 
         m) MODELS=${OPTARG};; 
+        p) HOST_POST=${OPTARG};; 
+	n) NAME=${OPTARG};;
         *) error "unexpected option ${flag}";;
     esac
 done
