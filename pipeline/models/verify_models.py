@@ -84,9 +84,8 @@ if __name__ == '__main__':
     verifier.open_sets()
     logger.info("Create models")
     models = [NTSVM(), NTAdaBoostClassifier(), NTDecisionTreeClassifier(),
-              NTGaussianProcessClassifier(), NTGradientBoostingClassifier(), 
-              NTKNeighbors(), NTLogisticRegression(), NTMLP(),
-              NTSGDClassifier()]
+              NTGradientBoostingClassifier(), NTKNeighbors(), 
+              NTLogisticRegression(), NTMLP(), NTSGDClassifier()]
     for model in models:
         logger.info("Train %s" % model.__class__.__name__)
         verifier.train_model(model, save_model_dir)
